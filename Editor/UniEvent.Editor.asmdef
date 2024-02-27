@@ -1,0 +1,19 @@
+{
+    "name": "UniEvent.Editor",
+    "rootNamespace": "UniEvent",
+    "references": [
+        "UniEvent",
+        "UniTask"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
