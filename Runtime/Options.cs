@@ -3,23 +3,23 @@ using System.Collections.Generic;
 
 namespace UniEvent
 {
-    public enum PublishAsyncStrategy
+    public enum AsyncPubStrategy
     {
         Parallel,
         Sequential
     }
 
-    public enum HandlingSubscribeDisposedPolicy
+    public enum HandleDisposedStrategy
     {
         Ignore,
         Throw
     }
 
-    internal static class HandlingSubscribeDisposedPolicyExtensions
+    internal static class HandleDisposedStrategyExtensions
     {
-        public static IDisposable Handle(this HandlingSubscribeDisposedPolicy policy, string name)
+        public static IDisposable Handle(this HandleDisposedStrategy strategy, string name)
         {
-            if (policy == HandlingSubscribeDisposedPolicy.Throw)
+            if (strategy == HandleDisposedStrategy.Throw)
             {
                 throw new ObjectDisposedException(name);
             }
@@ -31,19 +31,19 @@ namespace UniEvent
     public sealed class Options
     {
         /// <summary>AsyncPublisher.PublishAsync's concurrent strategy, default is Parallel.</summary>
-        public PublishAsyncStrategy DefaultPublishAsyncStrategy { get; set; }
+        public AsyncPubStrategy DefaultStrategy { get; set; }
 
         /// <summary>For diagnostics usage, enable MessagePipeDiagnosticsInfo.CapturedStackTraces; default is false.</summary>
         public bool EnableCaptureStackTrace { get; set; }
 
         /// <summary>Choose how work on subscriber.Subscribe when after disposed, default is Ignore.</summary>
-        public HandlingSubscribeDisposedPolicy HandlingSubscribeDisposedPolicy { get; set; }
+        public HandleDisposedStrategy HandleDisposedStrategy { get; set; }
 
         public Options()
         {
-            DefaultPublishAsyncStrategy = PublishAsyncStrategy.Parallel;
+            DefaultStrategy = AsyncPubStrategy.Parallel;
             EnableCaptureStackTrace = true;
-            HandlingSubscribeDisposedPolicy = HandlingSubscribeDisposedPolicy.Ignore;
+            HandleDisposedStrategy = HandleDisposedStrategy.Ignore;
         }
 
         Dictionary<Type, List<IMsgHandlerDecorator>> brokerDecorators = new Dictionary<Type, List<IMsgHandlerDecorator>>();

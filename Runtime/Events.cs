@@ -26,8 +26,8 @@ namespace UniEvent
         }
 
         internal static IEvent<T> NewEvent<T>() => factory.NewEvent<T>();
-        internal static ITopic<K, T> NewTopic<K, T>() => factory.NewTopic<K, T>();
         internal static IEvent<T, R> NewEvent<T, R>() => factory.NewEvent<T, R>();
+        internal static ITopic<K, T> NewTopic<K, T>() => factory.NewTopic<K, T>();
         internal static ITopic<K, T, R> NewTopic<K, T, R>() => factory.NewTopic<K, T, R>();
 
         public static void AddBrokerDecorator<T>(T decorator) where T : IMsgHandlerDecorator

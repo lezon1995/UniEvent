@@ -10,7 +10,7 @@ using UniEvent.Internal;
 
 namespace UniEvent
 {
-    internal interface IHandlerHolderMarker
+    internal interface IHandlerMarker
     {
     }
 
@@ -98,12 +98,12 @@ namespace UniEvent
     {
         static ILookup<string, StackTraceInfo> EmptyLookup = Array.Empty<StackTraceInfo>().ToLookup(_ => "", x => x);
 
-        int subscribeCount;
+        int subCount;
         bool dirty;
 
         object gate = new object();
-        Dictionary<IHandlerHolderMarker, Dictionary<IDisposable, StackTraceInfo>> capturedStackTraces = new Dictionary<IHandlerHolderMarker, Dictionary<IDisposable, StackTraceInfo>>();
-        public int SubscribeCount => subscribeCount;
+        Dictionary<IHandlerMarker, Dictionary<IDisposable, StackTraceInfo>> capturedStackTraces = new Dictionary<IHandlerMarker, Dictionary<IDisposable, StackTraceInfo>>();
+        public int SubCount => subCount;
         internal Options Options { get; }
 
         internal bool CheckAndResetDirty()
@@ -156,26 +156,26 @@ namespace UniEvent
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal void IncrementSubscribe(IHandlerHolderMarker handlerHolder, IDisposable subscription)
+        internal void IncrementSub(IHandlerMarker marker, IDisposable subscription)
         {
-            Interlocked.Increment(ref subscribeCount);
+            Interlocked.Increment(ref subCount);
             if (Options.EnableCaptureStackTrace)
             {
-                AddStackTrace(handlerHolder, subscription);
+                AddStackTrace(marker, subscription);
             }
 
             dirty = true;
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        void AddStackTrace(IHandlerHolderMarker handlerHolder, IDisposable subscription)
+        void AddStackTrace(IHandlerMarker marker, IDisposable subscription)
         {
             lock (gate)
             {
-                if (!capturedStackTraces.TryGetValue(handlerHolder, out var dict))
+                if (!capturedStackTraces.TryGetValue(marker, out var dict))
                 {
                     dict = new Dictionary<IDisposable, StackTraceInfo>();
-                    capturedStackTraces[handlerHolder] = dict;
+                    capturedStackTraces[marker] = dict;
                 }
 
                 dict.Add(subscription, new StackTraceInfo(new StackTrace(true)));
@@ -183,37 +183,37 @@ namespace UniEvent
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal void DecrementSubscribe(IHandlerHolderMarker handlerHolder, IDisposable subscription)
+        internal void DecrementSub(IHandlerMarker marker, IDisposable subscription)
         {
-            Interlocked.Decrement(ref subscribeCount);
+            Interlocked.Decrement(ref subCount);
             if (Options.EnableCaptureStackTrace)
             {
-                RemoveStackTrace(handlerHolder, subscription);
+                RemoveStackTrace(marker, subscription);
             }
 
             dirty = true;
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        void RemoveStackTrace(IHandlerHolderMarker handlerHolder, IDisposable subscription)
+        void RemoveStackTrace(IHandlerMarker marker, IDisposable subscription)
         {
             lock (gate)
             {
-                if (capturedStackTraces.TryGetValue(handlerHolder, out var dict))
+                if (capturedStackTraces.TryGetValue(marker, out var dict))
                 {
                     dict.Remove(subscription);
                 }
             }
         }
 
-        internal void RemoveTargetDiagnostics(IHandlerHolderMarker targetHolder, int removeCount)
+        internal void RemoveTargetDiagnostics(IHandlerMarker target, int removeCount)
         {
-            Interlocked.Add(ref subscribeCount, -removeCount);
+            Interlocked.Add(ref subCount, -removeCount);
             if (Options.EnableCaptureStackTrace)
             {
                 lock (gate)
                 {
-                    capturedStackTraces.Remove(targetHolder);
+                    capturedStackTraces.Remove(target);
                 }
             }
 

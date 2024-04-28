@@ -25,16 +25,16 @@ namespace UniEvent
             Order = order;
         }
 
-        public virtual void Handle(T msg, BrokerHandler1<T> next)
+        public virtual void Handle(T msg, MsgHandler1<T> next)
         {
         }
 
-        public virtual UniTask HandleAsync(T msg, BrokerHandler2<T> next)
+        public virtual UniTask HandleAsync(T msg, MsgHandler2<T> next)
         {
             return default;
         }
 
-        public virtual UniTask HandleAsync(T msg, CancellationToken token, BrokerHandler3<T> next)
+        public virtual UniTask HandleAsync(T msg, CancellationToken token, MsgHandler3<T> next)
         {
             return default;
         }
@@ -57,18 +57,18 @@ namespace UniEvent
             Order = order;
         }
 
-        public virtual bool TryHandle(T msg, out R result, RequesterHandler1<T, R> next)
+        public virtual bool TryHandle(T msg, out R result, ReqHandler1<T, R> next)
         {
             result = default;
             return default;
         }
 
-        public virtual UniTask<(bool, R)> TryHandleAsync(T msg, RequesterHandler2<T, R> next)
+        public virtual UniTask<(bool, R)> TryHandleAsync(T msg, ReqHandler2<T, R> next)
         {
             return default;
         }
 
-        public virtual UniTask<(bool, R)> TryHandleAsync(T msg, CancellationToken token, RequesterHandler3<T, R> next)
+        public virtual UniTask<(bool, R)> TryHandleAsync(T msg, CancellationToken token, ReqHandler3<T, R> next)
         {
             return default;
         }

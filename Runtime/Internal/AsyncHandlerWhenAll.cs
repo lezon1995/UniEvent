@@ -120,9 +120,9 @@ namespace UniEvent.Internal
                     var handler = handlers[i];
                     UniTask<(bool, R)> task;
                     if (token == default)
-                        task = handler.TryHandleAsync(msg);
+                        task = handler.HandleAsync(msg);
                     else
-                        task = handler.TryHandleAsync(msg, token);
+                        task = handler.HandleAsync(msg, token);
 
                     var awaiter = task.GetAwaiter();
                     if (awaiter.IsCompleted)

@@ -67,9 +67,9 @@ namespace UniEvent
     public interface IHandler<in T, R>
     {
         SyncType Sync { get; set; }
-        bool TryHandle(T msg, out R result);
-        UniTask<(bool, R)> TryHandleAsync(T msg);
-        UniTask<(bool, R)> TryHandleAsync(T msg, CancellationToken token);
+        bool Handle(T msg, out R result);
+        UniTask<(bool, R)> HandleAsync(T msg);
+        UniTask<(bool, R)> HandleAsync(T msg, CancellationToken token);
     }
 
     internal sealed class Handler<T, R> : IHandler<T, R>
@@ -98,7 +98,7 @@ namespace UniEvent
             Sync = SyncType.ASyncCancelable;
         }
 
-        public bool TryHandle(T msg, out R result)
+        public bool Handle(T msg, out R result)
         {
             if (handler != null)
             {
@@ -110,7 +110,7 @@ namespace UniEvent
             return false;
         }
 
-        public UniTask<(bool, R)> TryHandleAsync(T msg)
+        public UniTask<(bool, R)> HandleAsync(T msg)
         {
             if (handlerAsync != null)
             {
@@ -120,7 +120,7 @@ namespace UniEvent
             return default;
         }
 
-        public UniTask<(bool, R)> TryHandleAsync(T msg, CancellationToken token)
+        public UniTask<(bool, R)> HandleAsync(T msg, CancellationToken token)
         {
             if (handlerAsyncCancelable != null)
             {

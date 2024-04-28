@@ -7,7 +7,7 @@ using System.Threading.Channels;
 
 namespace UniEvent
 {
-    public static partial class SubscriberExtensions
+    public static partial class SubExtensions
     {
         public static IUniTaskAsyncEnumerable<T> AsAsyncEnumerable<T>(this IEvent<T> subscriber, params HandlerDecorator<T>[] decorators)
         {
@@ -36,7 +36,7 @@ namespace UniEvent
         {
             var disposable = DisposableBag.CreateSingleAssignment();
             var e = new HandlerEnumerator<T>(disposable, token);
-            disposable.Disposable = subscriber.Subscribe(e, false, decorators);
+            disposable.Disposable = subscriber.Sub(e, false, decorators);
             return e;
         }
     }
@@ -58,7 +58,7 @@ namespace UniEvent
         {
             var disposable = DisposableBag.CreateSingleAssignment();
             var e = new HandlerEnumerator<T>(disposable, token);
-            disposable.Disposable = subscriber.Subscribe(key, e, decorators);
+            disposable.Disposable = subscriber.Sub(key, e, decorators);
             return e;
         }
     }

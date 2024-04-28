@@ -16,7 +16,7 @@ namespace UniEvent
 
         public static void Sub(Action<T> handler)
         {
-            var disposable = _event.Subscribe(handler);
+            var disposable = _event.Sub(handler);
             if (tuple == null)
             {
                 if (dict == null)
@@ -66,7 +66,7 @@ namespace UniEvent
 
         public static void Pub(T msg, bool buffered = false)
         {
-            _event.Publish(msg, buffered);
+            _event.Pub(msg, buffered);
         }
 
         #endregion
@@ -78,7 +78,7 @@ namespace UniEvent
 
         public static void SubTask(Func<T, UniTask> handler)
         {
-            var disposable = _event.Subscribe(handler);
+            var disposable = _event.Sub(handler);
             if (tuple2 == null)
             {
                 if (dict2 == null)
@@ -128,7 +128,7 @@ namespace UniEvent
 
         public static async UniTask PubAsync(T msg, bool buffered = false)
         {
-            await _event.PublishAsync(msg, buffered);
+            await _event.PubAsync(msg, buffered);
         }
 
         #endregion

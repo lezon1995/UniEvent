@@ -5,7 +5,7 @@ using UniEvent.Internal;
 
 namespace UniEvent
 {
-    public static partial class SubscriberExtensions
+    public static partial class SubExtensions
     {
         public static UniTask<T> FirstAsync<T>(this IEvent<T> subscriber, params HandlerDecorator<T>[] decorators)
         {
@@ -88,7 +88,7 @@ namespace UniEvent
 
             try
             {
-                subscription = subscriber.Subscribe(key, this, decorators);
+                subscription = subscriber.Sub(key, this, decorators);
             }
             catch (Exception ex)
             {
@@ -120,7 +120,7 @@ namespace UniEvent
 
             try
             {
-                subscription = subscriber.Subscribe(key, this, decorators);
+                subscription = subscriber.Sub(key, this, decorators);
             }
             catch (Exception ex)
             {
@@ -260,7 +260,7 @@ namespace UniEvent
 
             try
             {
-                subscription = subscriber.Subscribe(this, false, decorators);
+                subscription = subscriber.Sub(this, false, decorators);
             }
             catch (Exception ex)
             {
@@ -293,7 +293,7 @@ namespace UniEvent
 
             try
             {
-                subscription = subscriber.Subscribe(this, false, decorators);
+                subscription = subscriber.Sub(this, false, decorators);
             }
             catch (Exception ex)
             {

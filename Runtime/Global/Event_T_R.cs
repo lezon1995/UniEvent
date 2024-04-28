@@ -16,7 +16,7 @@ namespace UniEvent
 
         public static void Sub(Func<T, R> handler)
         {
-            var disposable = _event.Subscribe(handler);
+            var disposable = _event.Sub(handler);
             if (tuple == null)
             {
                 if (dict == null)
@@ -64,17 +64,17 @@ namespace UniEvent
             }
         }
 
-        public static bool TryPub(T e, out R result)
+        public static bool Pub(T e, out R result)
         {
-            if (_event.TryPublish(e, out result))
+            if (_event.Pub(e, out result))
                 return true;
 
             return false;
         }
         
-        public static bool TryPub(T e, List<R> results)
+        public static bool Pub(T e, List<R> results)
         {
-            if (_event.TryPublish(e, results))
+            if (_event.Pub(e, results))
                 return true;
 
             return false;
@@ -89,7 +89,7 @@ namespace UniEvent
 
         public static void SubTask(Func<T, UniTask<(bool, R)>> handler)
         {
-            var disposable = _event.Subscribe(handler);
+            var disposable = _event.Sub(handler);
             if (tuple2 == null)
             {
                 if (dict2 == null)
@@ -137,14 +137,14 @@ namespace UniEvent
             }
         }
 
-        public static async UniTask<(bool, R)> TryPubAsync(T e)
+        public static async UniTask<(bool, R)> PubAsync(T e)
         {
-            return await _event.TryPublishAsync(e);
+            return await _event.PubAsync(e);
         }
 
-        public static async UniTask<bool> TryPubAsync(T e, List<R> results)
+        public static async UniTask<bool> PubAsync(T e, List<R> results)
         {
-            return await _event.TryPublishAsync(e, results);
+            return await _event.PubAsync(e, results);
         }
 
         #endregion

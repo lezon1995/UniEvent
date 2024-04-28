@@ -16,7 +16,7 @@ namespace UniEvent
 
         public static void Sub(string topic, Action<T> handler)
         {
-            var disposable = _topic.Subscribe(topic, handler);
+            var disposable = _topic.Sub(topic, handler);
             var key = new Key(topic, handler);
             if (tuple == null)
             {
@@ -68,7 +68,7 @@ namespace UniEvent
 
         public static void Pub(string topic, T e)
         {
-            _topic.Publish(topic, e);
+            _topic.Pub(topic, e);
         }
 
         #endregion
@@ -80,7 +80,7 @@ namespace UniEvent
 
         public static void SubTask(string topic, Func<T, UniTask> handler)
         {
-            var disposable = _topic.Subscribe(topic, handler);
+            var disposable = _topic.Sub(topic, handler);
             var key = new Key2(topic, handler);
             if (tuple2 == null)
             {
@@ -132,7 +132,7 @@ namespace UniEvent
 
         public static async UniTask PubAsync(string topic, T e)
         {
-            await _topic.PublishAsync(topic, e);
+            await _topic.PubAsync(topic, e);
         }
 
         #endregion

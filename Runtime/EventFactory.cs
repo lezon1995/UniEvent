@@ -21,8 +21,8 @@ namespace UniEvent
         }
 
         public IEvent<T> NewEvent<T>() => new Event<T>(options, factory, diagnosticsInfo);
-        public ITopic<K, T> NewTopic<K, T>() => new Topic<K, T>(options, factory, diagnosticsInfo);
         public IEvent<T, R> NewEvent<T, R>() => new Event<T, R>(options, factory, diagnosticsInfo);
+        public ITopic<K, T> NewTopic<K, T>() => new Topic<K, T>(options, factory, diagnosticsInfo);
         public ITopic<K, T, R> NewTopic<K, T, R>() => new Topic<K, T, R>(options, factory, diagnosticsInfo);
     }
 }

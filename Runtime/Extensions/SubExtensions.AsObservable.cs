@@ -4,7 +4,7 @@ using Cysharp.Threading.Tasks;
 
 namespace UniEvent
 {
-    public static partial class SubscriberExtensions
+    public static partial class SubExtensions
     {
         public static IObservable<T> AsObservable<T>(this IEvent<T> subscriber, params HandlerDecorator<T>[] decorators)
         {
@@ -33,7 +33,7 @@ namespace UniEvent
 
         public IDisposable Subscribe(IObserver<T> observer)
         {
-            return subscriber.Subscribe(key, new ObserverHandler<T>(observer), decorators);
+            return subscriber.Sub(key, new ObserverHandler<T>(observer), decorators);
         }
     }
 
@@ -50,7 +50,7 @@ namespace UniEvent
 
         public IDisposable Subscribe(IObserver<T> observer)
         {
-            return subscriber.Subscribe(new ObserverHandler<T>(observer), false, decorators);
+            return subscriber.Sub(new ObserverHandler<T>(observer), false, decorators);
         }
     }
 

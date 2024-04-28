@@ -14,7 +14,7 @@ namespace UniEvent
             Order = int.MinValue;
         }
 
-        public override void Handle(T msg, BrokerHandler1<T> next)
+        public override void Handle(T msg, MsgHandler1<T> next)
         {
             if (predicate(msg))
             {
@@ -22,7 +22,7 @@ namespace UniEvent
             }
         }
 
-        public override UniTask HandleAsync(T msg, BrokerHandler2<T> next)
+        public override UniTask HandleAsync(T msg, MsgHandler2<T> next)
         {
             if (predicate(msg))
             {
@@ -32,7 +32,7 @@ namespace UniEvent
             return default;
         }
 
-        public override UniTask HandleAsync(T msg, CancellationToken token, BrokerHandler3<T> next)
+        public override UniTask HandleAsync(T msg, CancellationToken token, MsgHandler3<T> next)
         {
             if (predicate(msg))
             {

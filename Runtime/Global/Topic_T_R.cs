@@ -14,9 +14,9 @@ namespace UniEvent
         static Tuple<Key, IDisposable> tuple;
         static Dictionary<Key, IDisposable> dict;
 
-        public static bool TryPub(string topic, T e, out R result)
+        public static bool Pub(string topic, T e, out R result)
         {
-            if (_topic.TryPublish(topic, e, out result))
+            if (_topic.Pub(topic, e, out result))
                 return true;
 
             return false;
@@ -24,7 +24,7 @@ namespace UniEvent
 
         public static void Sub(string topic, Func<T, R> handler)
         {
-            var disposable = _topic.Subscribe(topic, handler);
+            var disposable = _topic.Sub(topic, handler);
             var key = new Key(topic, handler);
             if (tuple == null)
             {
@@ -83,7 +83,7 @@ namespace UniEvent
 
         public static void SubTask(string topic, Func<T, UniTask<(bool, R)>> handler)
         {
-            var disposable = _topic.Subscribe(topic, handler);
+            var disposable = _topic.Sub(topic, handler);
             var key = new Key2(topic, handler);
             if (tuple2 == null)
             {
@@ -133,14 +133,14 @@ namespace UniEvent
             }
         }
 
-        public static async UniTask<(bool, R)> TryPubAsync(string topic, T e)
+        public static async UniTask<(bool, R)> PubAsync(string topic, T e)
         {
-            return await _topic.TryPublishAsync(topic, e);
+            return await _topic.PubAsync(topic, e);
         }
 
-        public static async UniTask<bool> TryPubAsync(string topic, T e, List<R> results)
+        public static async UniTask<bool> PubAsync(string topic, T e, List<R> results)
         {
-            return await _topic.TryPublishAsync(topic, e, results);
+            return await _topic.PubAsync(topic, e, results);
         }
 
         #endregion

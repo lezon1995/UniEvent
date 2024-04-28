@@ -5,11 +5,9 @@ using Cysharp.Threading.Tasks;
 
 namespace UniEvent
 {
-    public delegate void BrokerHandler1<in T>(T msg);
-
-    public delegate UniTask BrokerHandler2<in T>(T msg);
-
-    public delegate UniTask BrokerHandler3<in T>(T msg, CancellationToken token);
+    public delegate void MsgHandler1<in T>(T msg);
+    public delegate UniTask MsgHandler2<in T>(T msg);
+    public delegate UniTask MsgHandler3<in T>(T msg, CancellationToken token);
     
     public sealed partial class HandlerFactory
     {
@@ -35,15 +33,15 @@ namespace UniEvent
         private sealed class HandlerWrapper<T> : IHandler<T>
         {
             public SyncType Sync { get; set; }
-            BrokerHandler1<T> handler;
-            BrokerHandler2<T> handlerAsync;
-            BrokerHandler3<T> handlerAsyncCancelable;
+            MsgHandler1<T> handler;
+            MsgHandler2<T> handlerAsync;
+            MsgHandler3<T> handlerAsyncCancelable;
 
             public HandlerWrapper(IHandler<T> body, IEnumerable<HandlerDecorator<T>> decorators)
             {
-                BrokerHandler1<T> next = null;
-                BrokerHandler2<T> nextAsync = null;
-                BrokerHandler3<T> nextAsyncCancelable = null;
+                MsgHandler1<T> next = null;
+                MsgHandler2<T> nextAsync = null;
+                MsgHandler3<T> nextAsyncCancelable = null;
 
                 switch (body.Sync)
                 {
@@ -108,11 +106,9 @@ namespace UniEvent
         }
     }
 
-    public delegate bool RequesterHandler1<in T, R>(T msg, out R result);
-
-    public delegate UniTask<(bool, R)> RequesterHandler2<in T, R>(T msg);
-
-    public delegate UniTask<(bool, R)> RequesterHandler3<in T, R>(T msg, CancellationToken token);
+    public delegate bool ReqHandler1<in T, R>(T msg, out R result);
+    public delegate UniTask<(bool, R)> ReqHandler2<in T, R>(T msg);
+    public delegate UniTask<(bool, R)> ReqHandler3<in T, R>(T msg, CancellationToken token);
 
     public sealed partial class HandlerFactory
     {
@@ -134,20 +130,20 @@ namespace UniEvent
         {
             public SyncType Sync { get; set; }
 
-            RequesterHandler1<T, R> handler;
-            RequesterHandler2<T, R> handlerAsync;
-            RequesterHandler3<T, R> handlerAsyncCancelable;
+            ReqHandler1<T, R> handler;
+            ReqHandler2<T, R> handlerAsync;
+            ReqHandler3<T, R> handlerAsyncCancelable;
 
             public HandlerWrapper(IHandler<T, R> body, IEnumerable<HandlerDecorator<T, R>> decorators)
             {
-                RequesterHandler1<T, R> next = null;
-                RequesterHandler2<T, R> nextAsync = null;
-                RequesterHandler3<T, R> nextAsyncCancelable = null;
+                ReqHandler1<T, R> next = null;
+                ReqHandler2<T, R> nextAsync = null;
+                ReqHandler3<T, R> nextAsyncCancelable = null;
 
                 switch (body.Sync)
                 {
                     case SyncType.Sync:
-                        next = body.TryHandle;
+                        next = body.Handle;
                         foreach (var decorator in decorators.OrderByDescending(x => x.Order))
                         {
                             var pre = next;
@@ -156,7 +152,7 @@ namespace UniEvent
 
                         break;
                     case SyncType.ASync:
-                        nextAsync = body.TryHandleAsync;
+                        nextAsync = body.HandleAsync;
                         foreach (var decorator in decorators.OrderByDescending(x => x.Order))
                         {
                             var pre = nextAsync;
@@ -165,7 +161,7 @@ namespace UniEvent
 
                         break;
                     case SyncType.ASyncCancelable:
-                        nextAsyncCancelable = body.TryHandleAsync;
+                        nextAsyncCancelable = body.HandleAsync;
                         foreach (var decorator in decorators.OrderByDescending(x => x.Order))
                         {
                             var pre = nextAsyncCancelable;
@@ -180,17 +176,17 @@ namespace UniEvent
                 handlerAsyncCancelable = nextAsyncCancelable;
             }
 
-            public bool TryHandle(T msg, out R result)
+            public bool Handle(T msg, out R result)
             {
                 return handler(msg, out result);
             }
 
-            public UniTask<(bool, R)> TryHandleAsync(T msg)
+            public UniTask<(bool, R)> HandleAsync(T msg)
             {
                 return handlerAsync(msg);
             }
 
-            public UniTask<(bool, R)> TryHandleAsync(T msg, CancellationToken token)
+            public UniTask<(bool, R)> HandleAsync(T msg, CancellationToken token)
             {
                 return handlerAsyncCancelable(msg, token);
             }

@@ -8,16 +8,15 @@ namespace UniEvent
 {
     public interface IEvent<T>
     {
-        void Publish(T msg, bool buffered = false);
+        void Pub(T msg, bool buffered = false);
+        IDisposable Sub(IHandler<T> handler, bool handleBuffered = false, params HandlerDecorator<T>[] decorators);
 
-        UniTask PublishAsync(T msg, bool buffered = false, CancellationToken token = default);
-        UniTask PublishAsync(T msg, PublishAsyncStrategy strategy, bool buffered = false, CancellationToken token = default);
-
-        IDisposable Subscribe(IHandler<T> handler, bool handleBuffered = false, params HandlerDecorator<T>[] decorators);
-        UniTask<IDisposable> SubscribeAsync(IHandler<T> handler, bool handleBuffered = false, CancellationToken token = default, params HandlerDecorator<T>[] decorators);
+        UniTask PubAsync(T msg, bool buffered = false, CancellationToken token = default);
+        UniTask PubAsync(T msg, AsyncPubStrategy strategy, bool buffered = false, CancellationToken token = default);
+        UniTask<IDisposable> SubAsync(IHandler<T> handler, bool handleBuffered = false, CancellationToken token = default, params HandlerDecorator<T>[] decorators);
     }
 
-    public class Event<T> : IEvent<T>, IDisposable, IHandlerHolderMarker
+    public class Event<T> : IEvent<T>, IDisposable, IHandlerMarker
     {
         Options options;
         HandlerFactory handlerFactory;
@@ -41,7 +40,7 @@ namespace UniEvent
             gate = new object();
         }
 
-        public void Publish(T msg, bool buffered = false)
+        public void Pub(T msg, bool buffered = false)
         {
             if (buffered)
             {
@@ -56,19 +55,19 @@ namespace UniEvent
             }
         }
 
-        public async UniTask PublishAsync(T msg, bool buffered = false, CancellationToken token = default)
+        public async UniTask PubAsync(T msg, bool buffered = false, CancellationToken token = default)
         {
-            await PublishAsync(msg, options.DefaultPublishAsyncStrategy, buffered, token);
+            await PubAsync(msg, options.DefaultStrategy, buffered, token);
         }
 
-        public async UniTask PublishAsync(T msg, PublishAsyncStrategy strategy, bool buffered = false, CancellationToken token = default)
+        public async UniTask PubAsync(T msg, AsyncPubStrategy strategy, bool buffered = false, CancellationToken token = default)
         {
             if (buffered)
             {
                 buffer.Enqueue(msg);
             }
 
-            if (handlers.Count <= 1 || strategy == PublishAsyncStrategy.Sequential)
+            if (handlers.Count <= 1 || strategy == AsyncPubStrategy.Sequential)
             {
                 foreach (var handler in handlers)
                 {
@@ -84,7 +83,7 @@ namespace UniEvent
             }
         }
 
-        public IDisposable Subscribe(IHandler<T> handler, bool handleBuffered = false, params HandlerDecorator<T>[] decorators)
+        public IDisposable Sub(IHandler<T> handler, bool handleBuffered = false, params HandlerDecorator<T>[] decorators)
         {
             if (handleBuffered)
             {
@@ -94,10 +93,10 @@ namespace UniEvent
                 }
             }
 
-            return InternalSubscribe(handler, decorators);
+            return InternalSub(handler, decorators);
         }
 
-        public async UniTask<IDisposable> SubscribeAsync(IHandler<T> handler, bool handleBuffered = false, CancellationToken token = default, params HandlerDecorator<T>[] decorators)
+        public async UniTask<IDisposable> SubAsync(IHandler<T> handler, bool handleBuffered = false, CancellationToken token = default, params HandlerDecorator<T>[] decorators)
         {
             if (handleBuffered)
             {
@@ -111,22 +110,22 @@ namespace UniEvent
                 }
             }
 
-            return InternalSubscribe(handler, decorators);
+            return InternalSub(handler, decorators);
         }
 
-        IDisposable InternalSubscribe(IHandler<T> handler, params HandlerDecorator<T>[] decorators)
+        IDisposable InternalSub(IHandler<T> handler, params HandlerDecorator<T>[] decorators)
         {
             lock (gate)
             {
                 if (isDisposed)
                 {
-                    return options.HandlingSubscribeDisposedPolicy.Handle(nameof(Event<T>));
+                    return options.HandleDisposedStrategy.Handle(nameof(Event<T>));
                 }
 
                 handler = handlerFactory.BuildHandler(handler, decorators);
                 handlers.Add(handler);
                 var subscription = new Subscription(this, handler);
-                diagnosticsInfo.IncrementSubscribe(this, subscription);
+                diagnosticsInfo.IncrementSub(this, subscription);
                 return subscription;
             }
         }
@@ -167,7 +166,7 @@ namespace UniEvent
                     lock (_event.gate)
                     {
                         _event.handlers.Remove(subscriptionKey);
-                        _event.diagnosticsInfo.DecrementSubscribe(_event, this);
+                        _event.diagnosticsInfo.DecrementSub(_event, this);
                     }
                 }
             }
@@ -176,19 +175,19 @@ namespace UniEvent
 
     public interface IEvent<T, R>
     {
-        bool TryPublish(T msg, out R result);
-        bool TryPublish(T msg, List<R> results);
+        bool Pub(T msg, out R result);
+        bool Pub(T msg, List<R> results);
 
-        UniTask<(bool, R)> TryPublishAsync(T msg, CancellationToken token = default);
-        UniTask<(bool, R)> TryPublishAsync(T msg, PublishAsyncStrategy strategy, CancellationToken token = default);
+        UniTask<(bool, R)> PubAsync(T msg, CancellationToken token = default);
+        UniTask<(bool, R)> PubAsync(T msg, AsyncPubStrategy strategy, CancellationToken token = default);
 
-        UniTask<bool> TryPublishAsync(T msg, List<R> result, CancellationToken token = default);
-        UniTask<bool> TryPublishAsync(T msg, List<R> result, PublishAsyncStrategy strategy, CancellationToken token = default);
+        UniTask<bool> PubAsync(T msg, List<R> result, CancellationToken token = default);
+        UniTask<bool> PubAsync(T msg, List<R> result, AsyncPubStrategy strategy, CancellationToken token = default);
 
-        IDisposable Subscribe(IHandler<T, R> handler, params HandlerDecorator<T, R>[] decorators);
+        IDisposable Sub(IHandler<T, R> handler, params HandlerDecorator<T, R>[] decorators);
     }
 
-    public class Event<T, R> : IEvent<T, R>, IDisposable, IHandlerHolderMarker
+    public class Event<T, R> : IEvent<T, R>, IDisposable, IHandlerMarker
     {
         Options options;
         HandlerFactory handlerFactory;
@@ -208,11 +207,11 @@ namespace UniEvent
             gate = new object();
         }
 
-        public bool TryPublish(T msg, out R result)
+        public bool Pub(T msg, out R result)
         {
             foreach (var handler in handlers)
             {
-                if (handler.TryHandle(msg, out result))
+                if (handler.Handle(msg, out result))
                 {
                     return true;
                 }
@@ -222,13 +221,13 @@ namespace UniEvent
             return false;
         }
 
-        public bool TryPublish(T msg, List<R> results)
+        public bool Pub(T msg, List<R> results)
         {
             results.Clear();
             bool hasResult = false;
             foreach (var handler in handlers)
             {
-                if (handler.TryHandle(msg, out var result))
+                if (handler.Handle(msg, out var result))
                 {
                     results.Add(result);
                     hasResult = true;
@@ -238,23 +237,23 @@ namespace UniEvent
             return hasResult;
         }
 
-        public async UniTask<(bool, R)> TryPublishAsync(T msg, CancellationToken token = default)
+        public async UniTask<(bool, R)> PubAsync(T msg, CancellationToken token = default)
         {
-            return await TryPublishAsync(msg, options.DefaultPublishAsyncStrategy, token);
+            return await PubAsync(msg, options.DefaultStrategy, token);
         }
 
-        public async UniTask<(bool, R)> TryPublishAsync(T msg, PublishAsyncStrategy strategy, CancellationToken token = default)
+        public async UniTask<(bool, R)> PubAsync(T msg, AsyncPubStrategy strategy, CancellationToken token = default)
         {
-            if (handlers.Count <= 1 || strategy == PublishAsyncStrategy.Sequential)
+            if (handlers.Count <= 1 || strategy == AsyncPubStrategy.Sequential)
             {
                 foreach (var handler in handlers)
                 {
                     bool success;
                     R result;
                     if (token == default)
-                        (success, result) = await handler.TryHandleAsync(msg);
+                        (success, result) = await handler.HandleAsync(msg);
                     else
-                        (success, result) = await handler.TryHandleAsync(msg, token);
+                        (success, result) = await handler.HandleAsync(msg, token);
 
                     if (success)
                     {
@@ -274,25 +273,25 @@ namespace UniEvent
             return (false, default);
         }
 
-        public async UniTask<bool> TryPublishAsync(T msg, List<R> result, CancellationToken token = default)
+        public async UniTask<bool> PubAsync(T msg, List<R> result, CancellationToken token = default)
         {
-            return await TryPublishAsync(msg, result, options.DefaultPublishAsyncStrategy, token);
+            return await PubAsync(msg, result, options.DefaultStrategy, token);
         }
 
-        public async UniTask<bool> TryPublishAsync(T msg, List<R> list, PublishAsyncStrategy strategy, CancellationToken token = default)
+        public async UniTask<bool> PubAsync(T msg, List<R> list, AsyncPubStrategy strategy, CancellationToken token = default)
         {
             list.Clear();
             bool hasResult = false;
-            if (handlers.Count <= 1 || strategy == PublishAsyncStrategy.Sequential)
+            if (handlers.Count <= 1 || strategy == AsyncPubStrategy.Sequential)
             {
                 foreach (var handler in handlers)
                 {
                     bool success;
                     R result;
                     if (token == default)
-                        (success, result) = await handler.TryHandleAsync(msg);
+                        (success, result) = await handler.HandleAsync(msg);
                     else
-                        (success, result) = await handler.TryHandleAsync(msg, token);
+                        (success, result) = await handler.HandleAsync(msg, token);
 
                     if (success)
                     {
@@ -311,20 +310,19 @@ namespace UniEvent
             return hasResult;
         }
 
-        public IDisposable Subscribe(IHandler<T, R> handler, params HandlerDecorator<T, R>[] decorators)
+        public IDisposable Sub(IHandler<T, R> handler, params HandlerDecorator<T, R>[] decorators)
         {
             lock (gate)
             {
                 if (isDisposed)
-
                 {
-                    return options.HandlingSubscribeDisposedPolicy.Handle(nameof(Event<T, R>));
+                    return options.HandleDisposedStrategy.Handle(nameof(Event<T, R>));
                 }
 
                 handler = handlerFactory.BuildHandler(handler, decorators);
                 handlers.Add(handler);
                 var subscription = new Subscription(this, handler);
-                diagnosticsInfo.IncrementSubscribe(this, subscription);
+                diagnosticsInfo.IncrementSub(this, subscription);
                 return subscription;
             }
         }
@@ -366,7 +364,7 @@ namespace UniEvent
                     lock (_event.gate)
                     {
                         _event.handlers.Remove(subscriptionKey);
-                        _event.diagnosticsInfo.DecrementSubscribe(_event, this);
+                        _event.diagnosticsInfo.DecrementSub(_event, this);
                     }
                 }
             }
