@@ -5,11 +5,11 @@ using Cysharp.Threading.Tasks;
 
 namespace UniEvent
 {
-    public delegate void BrokerHandler1<in T>(T message);
+    public delegate void BrokerHandler1<in T>(T msg);
 
-    public delegate UniTask BrokerHandler2<in T>(T message);
+    public delegate UniTask BrokerHandler2<in T>(T msg);
 
-    public delegate UniTask BrokerHandler3<in T>(T message, CancellationToken token);
+    public delegate UniTask BrokerHandler3<in T>(T msg, CancellationToken token);
     
     public sealed partial class HandlerFactory
     {
@@ -20,26 +20,26 @@ namespace UniEvent
             options = _options;
         }
 
-        public IBrokerHandler<T> BuildHandler<T>(IBrokerHandler<T> handler, BrokerHandlerDecorator<T>[] decorators)
+        public IHandler<T> BuildHandler<T>(IHandler<T> handler, HandlerDecorator<T>[] decorators)
         {
             var hasG = options.TryGetBrokerDecorators<T>(out var enumerable);
             if (decorators.Length != 0 || hasG)
             {
-                var brokerDecorators = enumerable.Concat(decorators).Cast<BrokerHandlerDecorator<T>>();
+                var brokerDecorators = enumerable.Concat(decorators).Cast<HandlerDecorator<T>>();
                 handler = new HandlerWrapper<T>(handler, brokerDecorators);
             }
 
             return handler;
         }
 
-        private sealed class HandlerWrapper<T> : IBrokerHandler<T>
+        private sealed class HandlerWrapper<T> : IHandler<T>
         {
             public SyncType Sync { get; set; }
             BrokerHandler1<T> handler;
             BrokerHandler2<T> handlerAsync;
             BrokerHandler3<T> handlerAsyncCancelable;
 
-            public HandlerWrapper(IBrokerHandler<T> body, IEnumerable<BrokerHandlerDecorator<T>> decorators)
+            public HandlerWrapper(IHandler<T> body, IEnumerable<HandlerDecorator<T>> decorators)
             {
                 BrokerHandler1<T> next = null;
                 BrokerHandler2<T> nextAsync = null;
@@ -52,7 +52,7 @@ namespace UniEvent
                         foreach (var decorator in decorators.OrderByDescending(x => x.Order))
                         {
                             var pre = next;
-                            next = message => decorator.Handle(message, pre);
+                            next = msg => decorator.Handle(msg, pre);
                         }
 
                         break;
@@ -61,7 +61,7 @@ namespace UniEvent
                         foreach (var decorator in decorators.OrderByDescending(x => x.Order))
                         {
                             var pre = nextAsync;
-                            nextAsync = async message => await decorator.HandleAsync(message, pre);
+                            nextAsync = async msg => await decorator.HandleAsync(msg, pre);
                         }
 
                         break;
@@ -70,7 +70,7 @@ namespace UniEvent
                         foreach (var decorator in decorators.OrderByDescending(x => x.Order))
                         {
                             var pre = nextAsyncCancelable;
-                            nextAsyncCancelable = async (message, token) => await decorator.HandleAsync(message, token, pre);
+                            nextAsyncCancelable = async (msg, token) => await decorator.HandleAsync(msg, token, pre);
                         }
 
                         break;
@@ -81,26 +81,26 @@ namespace UniEvent
                 handlerAsyncCancelable = nextAsyncCancelable;
             }
 
-            public void Handle(T message)
+            public void Handle(T msg)
             {
-                handler?.Invoke(message);
+                handler?.Invoke(msg);
             }
 
-            public UniTask HandleAsync(T message)
+            public UniTask HandleAsync(T msg)
             {
                 if (handlerAsync != null)
                 {
-                    return handlerAsync.Invoke(message);
+                    return handlerAsync.Invoke(msg);
                 }
 
                 return default;
             }
 
-            public UniTask HandleAsync(T message, CancellationToken token)
+            public UniTask HandleAsync(T msg, CancellationToken token)
             {
                 if (handlerAsyncCancelable != null)
                 {
-                    return handlerAsyncCancelable.Invoke(message, token);
+                    return handlerAsyncCancelable.Invoke(msg, token);
                 }
 
                 return default;
@@ -108,20 +108,20 @@ namespace UniEvent
         }
     }
 
-    public delegate bool RequesterHandler1<in T, R>(T message, out R result);
+    public delegate bool RequesterHandler1<in T, R>(T msg, out R result);
 
-    public delegate UniTask<(bool, R)> RequesterHandler2<in T, R>(T message);
+    public delegate UniTask<(bool, R)> RequesterHandler2<in T, R>(T msg);
 
-    public delegate UniTask<(bool, R)> RequesterHandler3<in T, R>(T message, CancellationToken token);
+    public delegate UniTask<(bool, R)> RequesterHandler3<in T, R>(T msg, CancellationToken token);
 
     public sealed partial class HandlerFactory
     {
-        public IRequesterHandler<T, R> BuildHandler<T, R>(IRequesterHandler<T, R> handler, RequesterHandlerDecorator<T, R>[] decorators)
+        public IHandler<T, R> BuildHandler<T, R>(IHandler<T, R> handler, HandlerDecorator<T, R>[] decorators)
         {
             var hasG = options.TryGetRequesterDecorators<T, R>(out var enumerable);
             if (decorators.Length != 0 || hasG)
             {
-                var requesterDecorators = enumerable.Concat(decorators).Cast<RequesterHandlerDecorator<T, R>>();
+                var requesterDecorators = enumerable.Concat(decorators).Cast<HandlerDecorator<T, R>>();
                 handler = new HandlerWrapper<T, R>(handler, requesterDecorators);
             }
 
@@ -130,7 +130,7 @@ namespace UniEvent
 
         // 自定义带有返回值和 out 参数的委托类型
 
-        private sealed class HandlerWrapper<T, R> : IRequesterHandler<T, R>
+        private sealed class HandlerWrapper<T, R> : IHandler<T, R>
         {
             public SyncType Sync { get; set; }
 
@@ -138,7 +138,7 @@ namespace UniEvent
             RequesterHandler2<T, R> handlerAsync;
             RequesterHandler3<T, R> handlerAsyncCancelable;
 
-            public HandlerWrapper(IRequesterHandler<T, R> body, IEnumerable<RequesterHandlerDecorator<T, R>> decorators)
+            public HandlerWrapper(IHandler<T, R> body, IEnumerable<HandlerDecorator<T, R>> decorators)
             {
                 RequesterHandler1<T, R> next = null;
                 RequesterHandler2<T, R> nextAsync = null;
@@ -151,7 +151,7 @@ namespace UniEvent
                         foreach (var decorator in decorators.OrderByDescending(x => x.Order))
                         {
                             var pre = next;
-                            next = (T message, out R result) => decorator.TryHandle(message, out result, pre);
+                            next = (T msg, out R result) => decorator.TryHandle(msg, out result, pre);
                         }
 
                         break;
@@ -160,7 +160,7 @@ namespace UniEvent
                         foreach (var decorator in decorators.OrderByDescending(x => x.Order))
                         {
                             var pre = nextAsync;
-                            nextAsync = async message => await decorator.TryHandleAsync(message, pre);
+                            nextAsync = async msg => await decorator.TryHandleAsync(msg, pre);
                         }
 
                         break;
@@ -169,7 +169,7 @@ namespace UniEvent
                         foreach (var decorator in decorators.OrderByDescending(x => x.Order))
                         {
                             var pre = nextAsyncCancelable;
-                            nextAsyncCancelable = async (message, token) => await decorator.TryHandleAsync(message, token, pre);
+                            nextAsyncCancelable = async (msg, token) => await decorator.TryHandleAsync(msg, token, pre);
                         }
 
                         break;
@@ -180,19 +180,19 @@ namespace UniEvent
                 handlerAsyncCancelable = nextAsyncCancelable;
             }
 
-            public bool TryHandle(T message, out R result)
+            public bool TryHandle(T msg, out R result)
             {
-                return handler(message, out result);
+                return handler(msg, out result);
             }
 
-            public UniTask<(bool, R)> TryHandleAsync(T message)
+            public UniTask<(bool, R)> TryHandleAsync(T msg)
             {
-                return handlerAsync(message);
+                return handlerAsync(msg);
             }
 
-            public UniTask<(bool, R)> TryHandleAsync(T message, CancellationToken token)
+            public UniTask<(bool, R)> TryHandleAsync(T msg, CancellationToken token)
             {
-                return handlerAsyncCancelable(message, token);
+                return handlerAsyncCancelable(msg, token);
             }
         }
     }

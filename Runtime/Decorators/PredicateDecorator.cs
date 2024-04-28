@@ -4,7 +4,7 @@ using Cysharp.Threading.Tasks;
 
 namespace UniEvent
 {
-    internal sealed class PredicateDecorator<T> : BrokerHandlerDecorator<T>
+    internal sealed class PredicateDecorator<T> : HandlerDecorator<T>
     {
         Func<T, bool> predicate;
 
@@ -14,29 +14,29 @@ namespace UniEvent
             Order = int.MinValue;
         }
 
-        public override void Handle(T message, BrokerHandler1<T> next)
+        public override void Handle(T msg, BrokerHandler1<T> next)
         {
-            if (predicate(message))
+            if (predicate(msg))
             {
-                next(message);
+                next(msg);
             }
         }
 
-        public override UniTask HandleAsync(T message, BrokerHandler2<T> next)
+        public override UniTask HandleAsync(T msg, BrokerHandler2<T> next)
         {
-            if (predicate(message))
+            if (predicate(msg))
             {
-                return next(message);
+                return next(msg);
             }
 
             return default;
         }
 
-        public override UniTask HandleAsync(T message, CancellationToken token, BrokerHandler3<T> next)
+        public override UniTask HandleAsync(T msg, CancellationToken token, BrokerHandler3<T> next)
         {
-            if (predicate(message))
+            if (predicate(msg))
             {
-                return next(message, token);
+                return next(msg, token);
             }
 
             return default;

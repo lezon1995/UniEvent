@@ -8,67 +8,67 @@ namespace UniEvent
         public int Order { get; set; }
     }
 
-    public interface IBrokerHandlerDecorator : IHandlerDecorator
+    public interface IMsgHandlerDecorator : IHandlerDecorator
     {
     }
 
-    public abstract class BrokerHandlerDecorator<T> : IBrokerHandlerDecorator
+    public abstract class HandlerDecorator<T> : IMsgHandlerDecorator
     {
         public int Order { get; set; }
 
-        protected BrokerHandlerDecorator()
+        protected HandlerDecorator()
         {
         }
 
-        protected BrokerHandlerDecorator(int order)
+        protected HandlerDecorator(int order)
         {
             Order = order;
         }
 
-        public virtual void Handle(T message, BrokerHandler1<T> next)
+        public virtual void Handle(T msg, BrokerHandler1<T> next)
         {
         }
 
-        public virtual UniTask HandleAsync(T message, BrokerHandler2<T> next)
+        public virtual UniTask HandleAsync(T msg, BrokerHandler2<T> next)
         {
             return default;
         }
 
-        public virtual UniTask HandleAsync(T message, CancellationToken token, BrokerHandler3<T> next)
+        public virtual UniTask HandleAsync(T msg, CancellationToken token, BrokerHandler3<T> next)
         {
             return default;
         }
     }
 
-    public interface IRequesterHandlerDecorator : IHandlerDecorator
+    public interface IReqHandlerDecorator : IHandlerDecorator
     {
     }
 
-    public abstract class RequesterHandlerDecorator<T, R> : IRequesterHandlerDecorator
+    public abstract class HandlerDecorator<T, R> : IReqHandlerDecorator
     {
         public int Order { get; set; }
 
-        protected RequesterHandlerDecorator()
+        protected HandlerDecorator()
         {
         }
 
-        protected RequesterHandlerDecorator(int order)
+        protected HandlerDecorator(int order)
         {
             Order = order;
         }
 
-        public virtual bool TryHandle(T message, out R result, RequesterHandler1<T, R> next)
+        public virtual bool TryHandle(T msg, out R result, RequesterHandler1<T, R> next)
         {
             result = default;
             return default;
         }
 
-        public virtual UniTask<(bool, R)> TryHandleAsync(T message, RequesterHandler2<T, R> next)
+        public virtual UniTask<(bool, R)> TryHandleAsync(T msg, RequesterHandler2<T, R> next)
         {
             return default;
         }
 
-        public virtual UniTask<(bool, R)> TryHandleAsync(T message, CancellationToken token, RequesterHandler3<T, R> next)
+        public virtual UniTask<(bool, R)> TryHandleAsync(T msg, CancellationToken token, RequesterHandler3<T, R> next)
         {
             return default;
         }

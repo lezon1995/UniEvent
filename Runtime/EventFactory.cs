@@ -20,28 +20,9 @@ namespace UniEvent
             factory = _factory;
         }
 
-        public IEventBroker<T> EventBroker<T>()
-        {
-            var broker = new Event.Broker<T>(options, factory, diagnosticsInfo);
-            return broker;
-        }
-
-        public ITopicBroker<K, T> TopicBroker<K, T>()
-        {
-            var broker = new Topic.Broker<K, T>(options, factory, diagnosticsInfo);
-            return broker;
-        }
-
-        public IEventRequester<T, R> EventRequester<T, R>()
-        {
-            var requester = new Event.Requester<T, R>(options, factory, diagnosticsInfo);
-            return requester;
-        }
-
-        public ITopicRequester<K, T, R> TopicRequester<K, T, R>()
-        {
-            var requester = new Topic.Requester<K, T, R>(options, factory, diagnosticsInfo);
-            return requester;
-        }
+        public IEvent<T> NewEvent<T>() => new Event<T>(options, factory, diagnosticsInfo);
+        public ITopic<K, T> NewTopic<K, T>() => new Topic<K, T>(options, factory, diagnosticsInfo);
+        public IEvent<T, R> NewEvent<T, R>() => new Event<T, R>(options, factory, diagnosticsInfo);
+        public ITopic<K, T, R> NewTopic<K, T, R>() => new Topic<K, T, R>(options, factory, diagnosticsInfo);
     }
 }

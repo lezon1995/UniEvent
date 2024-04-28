@@ -5,9 +5,9 @@ using Cysharp.Threading.Tasks;
 namespace UniEvent
 {
     // TopicBroker<string, T>
-    public static class Topic<T>
+    public static class UTopic<T>
     {
-        static ITopicBroker<string, T> broker;
+        static ITopic<string, T> _topic = Events.NewTopic<string, T>();
 
         #region Sync
 
@@ -16,8 +16,7 @@ namespace UniEvent
 
         public static void Sub(string topic, Action<T> handler)
         {
-            broker ??= Events.TopicBroker<string, T>();
-            var disposable = broker.Subscribe(topic, handler);
+            var disposable = _topic.Subscribe(topic, handler);
             var key = new Key(topic, handler);
             if (tuple == null)
             {
@@ -45,10 +44,8 @@ namespace UniEvent
 
         public static void UnSub(string topic, Action<T> handler)
         {
-            if (broker == null || dict == null)
-            {
+            if (dict == null)
                 return;
-            }
 
             var key = new Key(topic, handler);
             if (tuple == null)
@@ -71,8 +68,7 @@ namespace UniEvent
 
         public static void Pub(string topic, T e)
         {
-            broker ??= Events.TopicBroker<string, T>();
-            broker.Publish(topic, e);
+            _topic.Publish(topic, e);
         }
 
         #endregion
@@ -84,8 +80,7 @@ namespace UniEvent
 
         public static void SubTask(string topic, Func<T, UniTask> handler)
         {
-            broker ??= Events.TopicBroker<string, T>();
-            var disposable = broker.Subscribe(topic, handler);
+            var disposable = _topic.Subscribe(topic, handler);
             var key = new Key2(topic, handler);
             if (tuple2 == null)
             {
@@ -113,10 +108,8 @@ namespace UniEvent
 
         public static void UnSubTask(string topic, Func<T, UniTask> handler)
         {
-            if (broker == null || dict2 == null)
-            {
+            if (dict2 == null)
                 return;
-            }
 
             var key = new Key2(topic, handler);
             if (tuple2 == null)
@@ -139,8 +132,7 @@ namespace UniEvent
 
         public static async UniTask PubAsync(string topic, T e)
         {
-            broker ??= Events.TopicBroker<string, T>();
-            await broker.PublishAsync(topic, e);
+            await _topic.PublishAsync(topic, e);
         }
 
         #endregion

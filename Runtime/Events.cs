@@ -25,32 +25,17 @@ namespace UniEvent
             IsInitialized = true;
         }
 
-        internal static IEventBroker<T> EventBroker<T>()
-        {
-            return factory.EventBroker<T>();
-        }
+        internal static IEvent<T> NewEvent<T>() => factory.NewEvent<T>();
+        internal static ITopic<K, T> NewTopic<K, T>() => factory.NewTopic<K, T>();
+        internal static IEvent<T, R> NewEvent<T, R>() => factory.NewEvent<T, R>();
+        internal static ITopic<K, T, R> NewTopic<K, T, R>() => factory.NewTopic<K, T, R>();
 
-        internal static ITopicBroker<K, T> TopicBroker<K, T>()
-        {
-            return factory.TopicBroker<K, T>();
-        }
-
-        internal static IEventRequester<T, R> EventRequester<T, R>()
-        {
-            return factory.EventRequester<T, R>();
-        }
-
-        internal static ITopicRequester<K, T, R> TopicRequester<K, T, R>()
-        {
-            return factory.TopicRequester<K, T, R>();
-        }
-
-        public static void AddBrokerDecorator<T>(T decorator) where T : IBrokerHandlerDecorator
+        public static void AddBrokerDecorator<T>(T decorator) where T : IMsgHandlerDecorator
         {
             options.AddBrokerDecorator(decorator);
         }
 
-        public static void AddRequesterDecorator<T>(T decorator) where T : IRequesterHandlerDecorator
+        public static void AddRequesterDecorator<T>(T decorator) where T : IReqHandlerDecorator
         {
             options.AddRequesterDecorator(decorator);
         }

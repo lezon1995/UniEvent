@@ -5,9 +5,9 @@ using Cysharp.Threading.Tasks;
 namespace UniEvent
 {
     // TopicRequester<string, T, R>
-    public static class Topic<T, R>
+    public static class UTopic<T, R>
     {
-        static ITopicRequester<string, T, R> requester;
+        static ITopic<string, T, R> _topic = Events.NewTopic<string, T, R>();
 
         #region Sync
 
@@ -16,19 +16,15 @@ namespace UniEvent
 
         public static bool TryPub(string topic, T e, out R result)
         {
-            requester ??= Events.TopicRequester<string, T, R>();
-            if (requester.TryPublish(topic, e, out result))
-            {
+            if (_topic.TryPublish(topic, e, out result))
                 return true;
-            }
 
             return false;
         }
 
         public static void Sub(string topic, Func<T, R> handler)
         {
-            requester ??= Events.TopicRequester<string, T, R>();
-            var disposable = requester.Subscribe(topic, handler);
+            var disposable = _topic.Subscribe(topic, handler);
             var key = new Key(topic, handler);
             if (tuple == null)
             {
@@ -56,10 +52,8 @@ namespace UniEvent
 
         public static void UnSub(string topic, Func<T, R> handler)
         {
-            if (requester == null || dict == null)
-            {
+            if (dict == null)
                 return;
-            }
 
             var key = new Key(topic, handler);
             if (tuple == null)
@@ -89,8 +83,7 @@ namespace UniEvent
 
         public static void SubTask(string topic, Func<T, UniTask<(bool, R)>> handler)
         {
-            requester ??= Events.TopicRequester<string, T, R>();
-            var disposable = requester.Subscribe(topic, handler);
+            var disposable = _topic.Subscribe(topic, handler);
             var key = new Key2(topic, handler);
             if (tuple2 == null)
             {
@@ -118,10 +111,8 @@ namespace UniEvent
 
         public static void UnSubTask(string topic, Func<T, UniTask<(bool, R)>> handler)
         {
-            if (requester == null || dict2 == null)
-            {
+            if (dict2 == null)
                 return;
-            }
 
             var key = new Key2(topic, handler);
             if (tuple2 == null)
@@ -144,14 +135,12 @@ namespace UniEvent
 
         public static async UniTask<(bool, R)> TryPubAsync(string topic, T e)
         {
-            requester ??= Events.TopicRequester<string, T, R>();
-            return await requester.TryPublishAsync(topic, e);
+            return await _topic.TryPublishAsync(topic, e);
         }
 
         public static async UniTask<bool> TryPubAsync(string topic, T e, List<R> results)
         {
-            requester ??= Events.TopicRequester<string, T, R>();
-            return await requester.TryPublishAsync(topic, e, results);
+            return await _topic.TryPublishAsync(topic, e, results);
         }
 
         #endregion

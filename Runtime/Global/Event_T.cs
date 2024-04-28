@@ -5,9 +5,9 @@ using Cysharp.Threading.Tasks;
 namespace UniEvent
 {
     // EventBroker<T>
-    public static class Event<T>
+    public static class UEvent<T>
     {
-        static IEventBroker<T> broker;
+        static IEvent<T> _event = Events.NewEvent<T>();
 
         #region Sync
 
@@ -16,8 +16,7 @@ namespace UniEvent
 
         public static void Sub(Action<T> handler)
         {
-            broker ??= Events.EventBroker<T>();
-            var disposable = broker.Subscribe(handler);
+            var disposable = _event.Subscribe(handler);
             if (tuple == null)
             {
                 if (dict == null)
@@ -44,10 +43,8 @@ namespace UniEvent
 
         public static void UnSub(Action<T> handler)
         {
-            if (broker == null || dict == null)
-            {
+            if (dict == null)
                 return;
-            }
 
             if (tuple == null)
             {
@@ -67,10 +64,9 @@ namespace UniEvent
             }
         }
 
-        public static void Pub(T e, bool buffered = false)
+        public static void Pub(T msg, bool buffered = false)
         {
-            broker ??= Events.EventBroker<T>();
-            broker.Publish(e, buffered);
+            _event.Publish(msg, buffered);
         }
 
         #endregion
@@ -82,8 +78,7 @@ namespace UniEvent
 
         public static void SubTask(Func<T, UniTask> handler)
         {
-            broker ??= Events.EventBroker<T>();
-            var disposable = broker.Subscribe(handler);
+            var disposable = _event.Subscribe(handler);
             if (tuple2 == null)
             {
                 if (dict2 == null)
@@ -110,10 +105,8 @@ namespace UniEvent
 
         public static void UnSubTask(Func<T, UniTask> handler)
         {
-            if (broker == null || dict2 == null)
-            {
+            if (dict2 == null)
                 return;
-            }
 
             if (tuple2 == null)
             {
@@ -133,10 +126,9 @@ namespace UniEvent
             }
         }
 
-        public static async UniTask PubAsync(T e, bool buffered = false)
+        public static async UniTask PubAsync(T msg, bool buffered = false)
         {
-            broker ??= Events.EventBroker<T>();
-            await broker.PublishAsync(e, buffered);
+            await _event.PublishAsync(msg, buffered);
         }
 
         #endregion

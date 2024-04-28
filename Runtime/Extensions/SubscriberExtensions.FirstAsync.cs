@@ -7,17 +7,17 @@ namespace UniEvent
 {
     public static partial class SubscriberExtensions
     {
-        public static UniTask<T> FirstAsync<T>(this IEventBroker<T> subscriber, params BrokerHandlerDecorator<T>[] decorators)
+        public static UniTask<T> FirstAsync<T>(this IEvent<T> subscriber, params HandlerDecorator<T>[] decorators)
         {
             return new UniTask<T>(new FirstHandler<T>(subscriber, decorators), 0);
         }
 
-        public static UniTask<T> FirstAsync<T>(this IEventBroker<T> subscriber, CancellationToken token, params BrokerHandlerDecorator<T>[] decorators)
+        public static UniTask<T> FirstAsync<T>(this IEvent<T> subscriber, CancellationToken token, params HandlerDecorator<T>[] decorators)
         {
             return new UniTask<T>(new FirstHandler<T>(subscriber, token, decorators), 0);
         }
 
-        public static UniTask<T> FirstAsync<T>(this IEventBroker<T> subscriber, Func<T, bool> predicate, params BrokerHandlerDecorator<T>[] decorators)
+        public static UniTask<T> FirstAsync<T>(this IEvent<T> subscriber, Func<T, bool> predicate, params HandlerDecorator<T>[] decorators)
         {
             var decorator = new PredicateDecorator<T>(predicate);
             decorators = (decorators.Length == 0)
@@ -27,7 +27,7 @@ namespace UniEvent
             return new UniTask<T>(new FirstHandler<T>(subscriber, decorators), 0);
         }
 
-        public static UniTask<T> FirstAsync<T>(this IEventBroker<T> subscriber, CancellationToken token, Func<T, bool> predicate, params BrokerHandlerDecorator<T>[] decorators)
+        public static UniTask<T> FirstAsync<T>(this IEvent<T> subscriber, CancellationToken token, Func<T, bool> predicate, params HandlerDecorator<T>[] decorators)
         {
             var decorator = new PredicateDecorator<T>(predicate);
             decorators = (decorators.Length == 0)
@@ -37,17 +37,17 @@ namespace UniEvent
             return new UniTask<T>(new FirstHandler<T>(subscriber, token, decorators), 0);
         }
 
-        public static UniTask<T> FirstAsync<K, T>(this ITopicBroker<K, T> subscriber, K key, params BrokerHandlerDecorator<T>[] decorators)
+        public static UniTask<T> FirstAsync<K, T>(this ITopic<K, T> subscriber, K key, params HandlerDecorator<T>[] decorators)
         {
             return new UniTask<T>(new FirstHandler<K, T>(subscriber, key, decorators), 0);
         }
 
-        public static UniTask<T> FirstAsync<K, T>(this ITopicBroker<K, T> subscriber, K key, CancellationToken token, params BrokerHandlerDecorator<T>[] decorators)
+        public static UniTask<T> FirstAsync<K, T>(this ITopic<K, T> subscriber, K key, CancellationToken token, params HandlerDecorator<T>[] decorators)
         {
             return new UniTask<T>(new FirstHandler<K, T>(subscriber, key, token, decorators), 0);
         }
 
-        public static UniTask<T> FirstAsync<K, T>(this ITopicBroker<K, T> subscriber, K key, Func<T, bool> predicate, params BrokerHandlerDecorator<T>[] decorators)
+        public static UniTask<T> FirstAsync<K, T>(this ITopic<K, T> subscriber, K key, Func<T, bool> predicate, params HandlerDecorator<T>[] decorators)
         {
             var decorator = new PredicateDecorator<T>(predicate);
             decorators = decorators.Length == 0 ? new[] { decorator } : ArrayUtil.ImmutableAdd(decorators, decorator);
@@ -55,7 +55,7 @@ namespace UniEvent
             return new UniTask<T>(new FirstHandler<K, T>(subscriber, key, decorators), 0);
         }
 
-        public static UniTask<T> FirstAsync<K, T>(this ITopicBroker<K, T> subscriber, K key, CancellationToken token, Func<T, bool> predicate, params BrokerHandlerDecorator<T>[] decorators)
+        public static UniTask<T> FirstAsync<K, T>(this ITopic<K, T> subscriber, K key, CancellationToken token, Func<T, bool> predicate, params HandlerDecorator<T>[] decorators)
         {
             var decorator = new PredicateDecorator<T>(predicate);
             decorators = decorators.Length == 0 ? new[] { decorator } : ArrayUtil.ImmutableAdd(decorators, decorator);
@@ -63,7 +63,7 @@ namespace UniEvent
         }
     }
 
-    internal sealed class FirstHandler<K, T> : IBrokerHandler<T>, IUniTaskSource<T>
+    internal sealed class FirstHandler<K, T> : IHandler<T>, IUniTaskSource<T>
     {
         public SyncType Sync { get; set; }
 
@@ -75,7 +75,7 @@ namespace UniEvent
 
         static Action<object> cancelCallback = Cancel;
 
-        public FirstHandler(ITopicBroker<K, T> subscriber, K key, BrokerHandlerDecorator<T>[] decorators)
+        public FirstHandler(ITopic<K, T> subscriber, K key, HandlerDecorator<T>[] decorators)
         {
             Sync = SyncType.ASync;
 
@@ -109,7 +109,7 @@ namespace UniEvent
             }
         }
 
-        public FirstHandler(ITopicBroker<K, T> subscriber, K key, CancellationToken _token, BrokerHandlerDecorator<T>[] decorators)
+        public FirstHandler(ITopic<K, T> subscriber, K key, CancellationToken _token, HandlerDecorator<T>[] decorators)
         {
             Sync = SyncType.ASyncCancelable;
             if (_token.IsCancellationRequested)
@@ -149,13 +149,13 @@ namespace UniEvent
         }
 
 
-        public void Handle(T message)
+        public void Handle(T msg)
         {
             if (Interlocked.Increment(ref handleCalled) == 1)
             {
                 try
                 {
-                    core.TrySetResult(message);
+                    core.TrySetResult(msg);
                 }
                 finally
                 {
@@ -165,7 +165,7 @@ namespace UniEvent
             }
         }
 
-        public UniTask HandleAsync(T message)
+        public UniTask HandleAsync(T msg)
         {
             if (Interlocked.Increment(ref handleCalled) == 1)
             {
@@ -177,7 +177,7 @@ namespace UniEvent
                     // }
                     // else
                     {
-                        core.TrySetResult(message);
+                        core.TrySetResult(msg);
                     }
                 }
                 finally
@@ -191,7 +191,7 @@ namespace UniEvent
         }
 
 
-        public UniTask HandleAsync(T message, CancellationToken _token)
+        public UniTask HandleAsync(T msg, CancellationToken _token)
         {
             if (Interlocked.Increment(ref handleCalled) == 1)
             {
@@ -203,7 +203,7 @@ namespace UniEvent
                     }
                     else
                     {
-                        core.TrySetResult(message);
+                        core.TrySetResult(msg);
                     }
                 }
                 finally
@@ -235,7 +235,7 @@ namespace UniEvent
         }
     }
 
-    internal sealed class FirstHandler<T> : IBrokerHandler<T>, IUniTaskSource<T>
+    internal sealed class FirstHandler<T> : IHandler<T>, IUniTaskSource<T>
     {
         public SyncType Sync { get; set; }
 
@@ -247,7 +247,7 @@ namespace UniEvent
 
         static Action<object> cancelCallback = Cancel;
 
-        public FirstHandler(IEventBroker<T> subscriber, BrokerHandlerDecorator<T>[] decorators)
+        public FirstHandler(IEvent<T> subscriber, HandlerDecorator<T>[] decorators)
         {
             Sync = SyncType.ASync;
 
@@ -281,7 +281,7 @@ namespace UniEvent
             }
         }
 
-        public FirstHandler(IEventBroker<T> subscriber, CancellationToken _token, BrokerHandlerDecorator<T>[] decorators)
+        public FirstHandler(IEvent<T> subscriber, CancellationToken _token, HandlerDecorator<T>[] decorators)
         {
             Sync = SyncType.ASyncCancelable;
 
@@ -321,13 +321,13 @@ namespace UniEvent
             self.core.TrySetException(new OperationCanceledException(self.token));
         }
 
-        public void Handle(T message)
+        public void Handle(T msg)
         {
             if (Interlocked.Increment(ref handleCalled) == 1)
             {
                 try
                 {
-                    core.TrySetResult(message);
+                    core.TrySetResult(msg);
                 }
                 finally
                 {
@@ -338,7 +338,7 @@ namespace UniEvent
         }
 
 
-        public UniTask HandleAsync(T message)
+        public UniTask HandleAsync(T msg)
         {
             if (Interlocked.Increment(ref handleCalled) == 1)
             {
@@ -350,7 +350,7 @@ namespace UniEvent
                     // }
                     // else
                     {
-                        core.TrySetResult(message);
+                        core.TrySetResult(msg);
                     }
                 }
                 finally
@@ -363,7 +363,7 @@ namespace UniEvent
             return default;
         }
 
-        public UniTask HandleAsync(T message, CancellationToken token)
+        public UniTask HandleAsync(T msg, CancellationToken token)
         {
             if (Interlocked.Increment(ref handleCalled) == 1)
             {
@@ -375,7 +375,7 @@ namespace UniEvent
                     }
                     else
                     {
-                        core.TrySetResult(message);
+                        core.TrySetResult(msg);
                     }
                 }
                 finally

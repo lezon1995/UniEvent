@@ -20,7 +20,7 @@ namespace UniEvent.Internal
         ExceptionDispatchInfo exception;
         Action continuation = ContinuationSentinel.AvailableContinuation;
 
-        public AsyncHandlerWhenAll(List<IBrokerHandler<T>> handlers, T message, CancellationToken token)
+        public AsyncHandlerWhenAll(List<IHandler<T>> handlers, T msg, CancellationToken token)
         {
             taskCount = handlers.Count;
 
@@ -30,9 +30,9 @@ namespace UniEvent.Internal
                 {
                     UniTask.Awaiter awaiter;
                     if (token == default)
-                        awaiter = handler.HandleAsync(message).GetAwaiter();
+                        awaiter = handler.HandleAsync(msg).GetAwaiter();
                     else
-                        awaiter = handler.HandleAsync(message, token).GetAwaiter();
+                        awaiter = handler.HandleAsync(msg, token).GetAwaiter();
 
                     if (awaiter.IsCompleted)
                     {
@@ -109,7 +109,7 @@ namespace UniEvent.Internal
         Action continuation = ContinuationSentinel.AvailableContinuation;
         R[] results;
 
-        public AsyncHandlerWhenAll(List<IRequesterHandler<T, R>> handlers, T message, CancellationToken token)
+        public AsyncHandlerWhenAll(List<IHandler<T, R>> handlers, T msg, CancellationToken token)
         {
             results = new R[handlers.Count];
 
@@ -120,9 +120,9 @@ namespace UniEvent.Internal
                     var handler = handlers[i];
                     UniTask<(bool, R)> task;
                     if (token == default)
-                        task = handler.TryHandleAsync(message);
+                        task = handler.TryHandleAsync(msg);
                     else
-                        task = handler.TryHandleAsync(message, token);
+                        task = handler.TryHandleAsync(msg, token);
 
                     var awaiter = task.GetAwaiter();
                     if (awaiter.IsCompleted)

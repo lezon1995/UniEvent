@@ -5,9 +5,9 @@ using Cysharp.Threading.Tasks;
 namespace UniEvent
 {
     // EventRequester<T, R>
-    public static class Event<T, R>
+    public static class UEvent<T, R>
     {
-        static IEventRequester<T, R> requester;
+        static IEvent<T, R> _event= Events.NewEvent<T, R>();
 
         #region Sync
 
@@ -16,8 +16,7 @@ namespace UniEvent
 
         public static void Sub(Func<T, R> handler)
         {
-            requester ??= Events.EventRequester<T, R>();
-            var disposable = requester.Subscribe(handler);
+            var disposable = _event.Subscribe(handler);
             if (tuple == null)
             {
                 if (dict == null)
@@ -44,10 +43,8 @@ namespace UniEvent
 
         public static void UnSub(Func<T, R> handler)
         {
-            if (requester == null || dict == null)
-            {
+            if (dict == null)
                 return;
-            }
 
             if (tuple == null)
             {
@@ -69,22 +66,16 @@ namespace UniEvent
 
         public static bool TryPub(T e, out R result)
         {
-            requester ??= Events.EventRequester<T, R>();
-            if (requester.TryPublish(e, out result))
-            {
+            if (_event.TryPublish(e, out result))
                 return true;
-            }
 
             return false;
         }
         
         public static bool TryPub(T e, List<R> results)
         {
-            requester ??= Events.EventRequester<T, R>();
-            if (requester.TryPublish(e, results))
-            {
+            if (_event.TryPublish(e, results))
                 return true;
-            }
 
             return false;
         }
@@ -98,8 +89,7 @@ namespace UniEvent
 
         public static void SubTask(Func<T, UniTask<(bool, R)>> handler)
         {
-            requester ??= Events.EventRequester<T, R>();
-            var disposable = requester.Subscribe(handler);
+            var disposable = _event.Subscribe(handler);
             if (tuple2 == null)
             {
                 if (dict2 == null)
@@ -126,10 +116,8 @@ namespace UniEvent
 
         public static void UnSubTask(Func<T, UniTask<(bool, R)>> handler)
         {
-            if (requester == null || dict2 == null)
-            {
+            if (dict2 == null)
                 return;
-            }
 
             if (tuple2 == null)
             {
@@ -151,14 +139,12 @@ namespace UniEvent
 
         public static async UniTask<(bool, R)> TryPubAsync(T e)
         {
-            requester ??= Events.EventRequester<T, R>();
-            return await requester.TryPublishAsync(e);
+            return await _event.TryPublishAsync(e);
         }
 
         public static async UniTask<bool> TryPubAsync(T e, List<R> results)
         {
-            requester ??= Events.EventRequester<T, R>();
-            return await requester.TryPublishAsync(e, results);
+            return await _event.TryPublishAsync(e, results);
         }
 
         #endregion

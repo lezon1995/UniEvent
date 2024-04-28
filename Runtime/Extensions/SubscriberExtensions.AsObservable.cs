@@ -6,12 +6,12 @@ namespace UniEvent
 {
     public static partial class SubscriberExtensions
     {
-        public static IObservable<T> AsObservable<T>(this IEventBroker<T> subscriber, params BrokerHandlerDecorator<T>[] decorators)
+        public static IObservable<T> AsObservable<T>(this IEvent<T> subscriber, params HandlerDecorator<T>[] decorators)
         {
             return new ObservableSubscriber<T>(subscriber, decorators);
         }
 
-        public static IObservable<T> AsObservable<K, T>(this ITopicBroker<K, T> subscriber, K key, params BrokerHandlerDecorator<T>[] decorators)
+        public static IObservable<T> AsObservable<K, T>(this ITopic<K, T> subscriber, K key, params HandlerDecorator<T>[] decorators)
 
         {
             return new ObservableSubscriber<K, T>(key, subscriber, decorators);
@@ -21,10 +21,10 @@ namespace UniEvent
     internal sealed class ObservableSubscriber<K, T> : IObservable<T>
     {
         K key;
-        ITopicBroker<K, T> subscriber;
-        BrokerHandlerDecorator<T>[] decorators;
+        ITopic<K, T> subscriber;
+        HandlerDecorator<T>[] decorators;
 
-        public ObservableSubscriber(K _key, ITopicBroker<K, T> _subscriber, BrokerHandlerDecorator<T>[] _decorators)
+        public ObservableSubscriber(K _key, ITopic<K, T> _subscriber, HandlerDecorator<T>[] _decorators)
         {
             key = _key;
             subscriber = _subscriber;
@@ -39,10 +39,10 @@ namespace UniEvent
 
     internal sealed class ObservableSubscriber<T> : IObservable<T>
     {
-        IEventBroker<T> subscriber;
-        BrokerHandlerDecorator<T>[] decorators;
+        IEvent<T> subscriber;
+        HandlerDecorator<T>[] decorators;
 
-        public ObservableSubscriber(IEventBroker<T> _subscriber, BrokerHandlerDecorator<T>[] _decorators)
+        public ObservableSubscriber(IEvent<T> _subscriber, HandlerDecorator<T>[] _decorators)
         {
             subscriber = _subscriber;
             decorators = _decorators;
@@ -55,7 +55,7 @@ namespace UniEvent
     }
 
 
-    internal sealed class ObserverHandler<T> : IBrokerHandler<T>
+    internal sealed class ObserverHandler<T> : IHandler<T>
     {
         public SyncType Sync { get; set; }
         IObserver<T> observer;
@@ -66,17 +66,17 @@ namespace UniEvent
             Sync = SyncType.Sync;
         }
 
-        public void Handle(T message)
+        public void Handle(T msg)
         {
-            observer.OnNext(message);
+            observer.OnNext(msg);
         }
 
-        public UniTask HandleAsync(T message)
+        public UniTask HandleAsync(T msg)
         {
             throw new NotImplementedException();
         }
 
-        public UniTask HandleAsync(T message, CancellationToken token)
+        public UniTask HandleAsync(T msg, CancellationToken token)
         {
             throw new NotImplementedException();
         }

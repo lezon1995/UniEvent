@@ -9,12 +9,12 @@ namespace UniEvent
 {
     public static partial class SubscriberExtensions
     {
-        public static IUniTaskAsyncEnumerable<T> AsAsyncEnumerable<T>(this IEventBroker<T> subscriber, params BrokerHandlerDecorator<T>[] decorators)
+        public static IUniTaskAsyncEnumerable<T> AsAsyncEnumerable<T>(this IEvent<T> subscriber, params HandlerDecorator<T>[] decorators)
         {
             return new AsyncEnumerableAsyncSubscriber<T>(subscriber, decorators);
         }
 
-        public static IUniTaskAsyncEnumerable<T> AsAsyncEnumerable<K, T>(this ITopicBroker<K, T> subscriber, K key, params BrokerHandlerDecorator<T>[] decorators)
+        public static IUniTaskAsyncEnumerable<T> AsAsyncEnumerable<K, T>(this ITopic<K, T> subscriber, K key, params HandlerDecorator<T>[] decorators)
 
         {
             return new AsyncEnumerableAsyncSubscriber<K, T>(key, subscriber, decorators);
@@ -23,10 +23,10 @@ namespace UniEvent
 
     internal class AsyncEnumerableAsyncSubscriber<T> : IUniTaskAsyncEnumerable<T>
     {
-        IEventBroker<T> subscriber;
-        BrokerHandlerDecorator<T>[] decorators;
+        IEvent<T> subscriber;
+        HandlerDecorator<T>[] decorators;
 
-        public AsyncEnumerableAsyncSubscriber(IEventBroker<T> _subscriber, BrokerHandlerDecorator<T>[] _decorators)
+        public AsyncEnumerableAsyncSubscriber(IEvent<T> _subscriber, HandlerDecorator<T>[] _decorators)
         {
             subscriber = _subscriber;
             decorators = _decorators;
@@ -44,10 +44,10 @@ namespace UniEvent
     internal class AsyncEnumerableAsyncSubscriber<K, T> : IUniTaskAsyncEnumerable<T>
     {
         K key;
-        ITopicBroker<K, T> subscriber;
-        BrokerHandlerDecorator<T>[] decorators;
+        ITopic<K, T> subscriber;
+        HandlerDecorator<T>[] decorators;
 
-        public AsyncEnumerableAsyncSubscriber(K _key, ITopicBroker<K, T> _subscriber, BrokerHandlerDecorator<T>[] _decorators)
+        public AsyncEnumerableAsyncSubscriber(K _key, ITopic<K, T> _subscriber, HandlerDecorator<T>[] _decorators)
         {
             key = _key;
             subscriber = _subscriber;
@@ -63,7 +63,7 @@ namespace UniEvent
         }
     }
 
-    internal class HandlerEnumerator<T> : IUniTaskAsyncEnumerator<T>, IBrokerHandler<T>
+    internal class HandlerEnumerator<T> : IUniTaskAsyncEnumerator<T>, IHandler<T>
     {
         public SyncType Sync { get; set; }
         Channel<T> channel;
@@ -109,26 +109,26 @@ namespace UniEvent
             return channel.Reader.WaitToReadAsync(token);
         }
 
-        void IBrokerHandler<T>.Handle(T message)
+        void IHandler<T>.Handle(T msg)
         {
-            channel.Writer.TryWrite(message);
+            channel.Writer.TryWrite(msg);
         }
 
-        UniTask IBrokerHandler<T>.HandleAsync(T message)
+        UniTask IHandler<T>.HandleAsync(T msg)
         {
-            channel.Writer.TryWrite(message);
+            channel.Writer.TryWrite(msg);
             return default;
         }
 
-        UniTask IBrokerHandler<T>.HandleAsync(T message, CancellationToken token)
+        UniTask IHandler<T>.HandleAsync(T msg, CancellationToken token)
         {
-            channel.Writer.TryWrite(message);
+            channel.Writer.TryWrite(msg);
             return default;
         }
 
         UniTask IUniTaskAsyncDisposable.DisposeAsync()
         {
-            // unsubscribe message.
+            // unsubscribe msg.
             singleAssignmentDisposable.Dispose();
             return default;
         }

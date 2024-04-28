@@ -46,9 +46,9 @@ namespace UniEvent
             HandlingSubscribeDisposedPolicy = HandlingSubscribeDisposedPolicy.Ignore;
         }
 
-        Dictionary<Type, List<IBrokerHandlerDecorator>> brokerDecorators = new Dictionary<Type, List<IBrokerHandlerDecorator>>();
+        Dictionary<Type, List<IMsgHandlerDecorator>> brokerDecorators = new Dictionary<Type, List<IMsgHandlerDecorator>>();
 
-        public void AddBrokerDecorator<T>(T decorator) where T : IBrokerHandlerDecorator
+        public void AddBrokerDecorator<T>(T decorator) where T : IMsgHandlerDecorator
         {
             var type = typeof(T);
 
@@ -65,7 +65,7 @@ namespace UniEvent
 
                 if (!brokerDecorators.TryGetValue(argType, out var list))
                 {
-                    list = new List<IBrokerHandlerDecorator>();
+                    list = new List<IMsgHandlerDecorator>();
                     brokerDecorators.Add(argType, list);
                 }
 
@@ -79,7 +79,7 @@ namespace UniEvent
             }
         }
 
-        internal bool TryGetBrokerDecorators<T>(out IEnumerable<IBrokerHandlerDecorator> results)
+        internal bool TryGetBrokerDecorators<T>(out IEnumerable<IMsgHandlerDecorator> results)
         {
             if (brokerDecorators.TryGetValue(typeof(T), out var list) && list.Count > 0)
             {
@@ -87,13 +87,13 @@ namespace UniEvent
                 return true;
             }
 
-            results = Array.Empty<IBrokerHandlerDecorator>();
+            results = Array.Empty<IMsgHandlerDecorator>();
             return false;
         }
 
-        Dictionary<(Type, Type), List<IRequesterHandlerDecorator>> requesterDecorators = new Dictionary<(Type, Type), List<IRequesterHandlerDecorator>>();
+        Dictionary<(Type, Type), List<IReqHandlerDecorator>> requesterDecorators = new Dictionary<(Type, Type), List<IReqHandlerDecorator>>();
 
-        public void AddRequesterDecorator<T>(T decorator) where T : IRequesterHandlerDecorator
+        public void AddRequesterDecorator<T>(T decorator) where T : IReqHandlerDecorator
         {
             var type = typeof(T);
 
@@ -112,7 +112,7 @@ namespace UniEvent
                 var key = (argType, returnType);
                 if (!requesterDecorators.TryGetValue(key, out var list))
                 {
-                    list = new List<IRequesterHandlerDecorator>();
+                    list = new List<IReqHandlerDecorator>();
                     requesterDecorators.Add(key, list);
                 }
 
@@ -126,7 +126,7 @@ namespace UniEvent
             }
         }
 
-        internal bool TryGetRequesterDecorators<T, R>(out IEnumerable<IRequesterHandlerDecorator> results)
+        internal bool TryGetRequesterDecorators<T, R>(out IEnumerable<IReqHandlerDecorator> results)
         {
             var key = (typeof(T), typeof(R));
             if (requesterDecorators.TryGetValue(key, out var list) && list.Count > 0)
@@ -135,7 +135,7 @@ namespace UniEvent
                 return true;
             }
 
-            results = Array.Empty<IRequesterHandlerDecorator>();
+            results = Array.Empty<IReqHandlerDecorator>();
             return false;
         }
     }
